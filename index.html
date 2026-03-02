@@ -7,6 +7,19 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- First-boot duration picker -->
+  <div class="duration-picker-overlay" id="durationPickerOverlay">
+    <div class="duration-picker" role="dialog" aria-labelledby="durationPickerTitle">
+      <h2 id="durationPickerTitle" class="duration-picker-title">Choose your work session length</h2>
+      <div class="duration-options">
+        <button type="button" class="btn btn-duration" data-minutes="30">30 min</button>
+        <button type="button" class="btn btn-duration" data-minutes="45">45 min</button>
+        <button type="button" class="btn btn-duration" data-minutes="60">60 min</button>
+        <button type="button" class="btn btn-duration" data-minutes="75">75 min</button>
+        <button type="button" class="btn btn-duration" data-minutes="90">90 min</button>
+      </div>
+    </div>
+  </div>
   <div class="progress-circles" id="progressCircles" aria-label="Session progress">
     <div class="circle" data-index="0"></div>
     <div class="circle" data-index="1"></div>
@@ -37,6 +50,7 @@
       <span id="sessionCount">0</span>
     </div>
     <button type="button" class="btn btn-link" id="resetSessionsBtn">Reset session count</button>
+    <button type="button" class="btn btn-link" id="changeDurationBtn">Change duration</button>
   </main>
   <!-- Modal for break/work prompts -->
   <div class="modal-overlay" id="modalOverlay" aria-hidden="true">

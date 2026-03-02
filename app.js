@@ -1,13 +1,28 @@
-const WORK_DURATION = 60 * 60; // 60 minutes in seconds
+const WORK_DURATION_OPTIONS = [30, 45, 60, 75, 90]; // minutes
 const BREAK_DURATION = 10 * 60; // 10 minutes in seconds
 const STORAGE_KEY = 'pomodoroTotalSessions';
+const STORAGE_KEY_DURATION = 'pomodoroWorkDurationMinutes';
 
 const state = {
   mode: 'work', // 'work' | 'break'
-  timeRemaining: WORK_DURATION,
+  timeRemaining: 0, // set on init
   isPaused: true,
   intervalId: null
 };
+
+function getWorkDurationMinutes() {
+  const stored = localStorage.getItem(STORAGE_KEY_DURATION);
+  const num = stored ? parseInt(stored, 10) : null;
+  return WORK_DURATION_OPTIONS.includes(num) ? num : 60;
+}
+
+function setWorkDurationMinutes(minutes) {
+  localStorage.setItem(STORAGE_KEY_DURATION, String(minutes));
+}
+
+function getWorkDurationSeconds() {
+  return getWorkDurationMinutes() * 60;
+}
 
 const elements = {
   timerDisplay: document.getElementById('timerDisplay'),
@@ -20,8 +35,121 @@ const elements = {
   modalOverlay: document.getElementById('modalOverlay'),
   modalTitle: document.getElementById('modalTitle'),
   modalMessage: document.getElementById('modalMessage'),
-  modalApproveBtn: document.getElementById('modalApproveBtn')
+  modalApproveBtn: document.getElementById('modalApproveBtn'),
+  durationPickerOverlay: document.getElementById('durationPickerOverlay'),
+  changeDurationBtn: document.getElementById('changeDurationBtn')
 };
+
+let audioContext = null;
+
+function getAudioContext() {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return audioContext;
+}
+
+async function ensureAudioReady() {
+  const ctx = getAudioContext();
+  if (ctx.state === 'suspended') {
+    await ctx.resume();
+  }
+}
+
+function createBeepWav(frequency, duration) {
+  const sampleRate = 44100;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+  const writeStr = (offset, str) => {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const sample = Math.sin(2 * Math.PI * frequency * t) * 0.3 * (1 - i / numSamples);
+    view.setInt16(44 + i * 2, sample * 32767, true);
+  }
+  return URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
+}
+
+function playFallbackBeep() {
+  const url = createBeepWav(523.25, 0.2);
+  const audio = new Audio(url);
+  audio.volume = 0.5;
+  audio.play().catch(() => {});
+  setTimeout(() => URL.revokeObjectURL(url), 500);
+}
+
+function playCalmingSound(type) {
+  ensureAudioReady().then(() => {
+    try {
+      const ctx = getAudioContext();
+      if (ctx.state !== 'running') {
+        playFallbackBeep();
+        return;
+      }
+      const now = ctx.currentTime;
+      const playTone = (frequency, duration, startTime, waveType = 'sine') => {
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        oscillator.type = waveType;
+        oscillator.frequency.setValueAtTime(frequency, now + startTime);
+        gainNode.gain.setValueAtTime(0.3, now + startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + startTime + duration);
+        oscillator.start(now + startTime);
+        oscillator.stop(now + startTime + duration);
+      };
+      if (type === 'start') {
+        playTone(523.25, 0.15, 0);
+        playTone(659.25, 0.15, 0.12);
+        playTone(783.99, 0.2, 0.24);
+      } else if (type === 'end') {
+        playTone(523.25, 0.2, 0, 'sine');
+        playTone(659.25, 0.2, 0.15, 'sine');
+        playTone(783.99, 0.2, 0.3, 'sine');
+        playTone(1046.5, 0.4, 0.45, 'sine');
+      } else if (type === 'pause') {
+        playTone(783.99, 0.12, 0, 'sine');
+        playTone(659.25, 0.12, 0.1, 'sine');
+        playTone(523.25, 0.15, 0.2, 'sine');
+      } else if (type === 'reset') {
+        playTone(392, 0.08, 0, 'sine');
+        playTone(329.63, 0.08, 0.06, 'sine');
+        playTone(261.63, 0.12, 0.12, 'sine');
+      } else if (type === 'resetSessions') {
+        playTone(523.25, 0.1, 0, 'sine');
+        playTone(392, 0.15, 0.08, 'sine');
+      } else if (type === 'confetti') {
+        playTone(880, 0.08, 0, 'sine');
+        playTone(1108.73, 0.08, 0.04, 'sine');
+        playTone(1318.51, 0.08, 0.08, 'sine');
+        playTone(1760, 0.12, 0.12, 'sine');
+        playTone(2093, 0.15, 0.18, 'sine');
+      }
+    } catch (e) {
+      playFallbackBeep();
+    }
+  });
+}
+
+function unlockAudioOnInteraction() {
+  ensureAudioReady();
+}
 
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60);
@@ -30,7 +158,7 @@ function formatTime(seconds) {
 }
 
 function getCurrentDuration() {
-  return state.mode === 'work' ? WORK_DURATION : BREAK_DURATION;
+  return state.mode === 'work' ? getWorkDurationSeconds() : BREAK_DURATION;
 }
 
 function updateProgressCircles() {
@@ -75,6 +203,7 @@ function incrementTotalSessions() {
 }
 
 function fireConfetti() {
+  playCalmingSound('confetti');
   if (typeof confetti === 'function') {
     confetti({
       particleCount: 120,
@@ -95,6 +224,7 @@ function showModal(title, message, onApprove) {
     elements.modalApproveBtn?.removeEventListener('click', handleApprove);
     elements.modalOverlay.classList.remove('visible');
     elements.modalOverlay.setAttribute('aria-hidden', 'true');
+    playCalmingSound('start');
     onApprove();
   };
   elements.modalApproveBtn.addEventListener('click', handleApprove);
@@ -102,6 +232,7 @@ function showModal(title, message, onApprove) {
 
 function onWorkComplete() {
   fireConfetti();
+  playCalmingSound('end');
   showModal('Work session complete!', 'Time for a 10-minute break. Click Start when you\'re ready.', () => {
     state.mode = 'break';
     state.timeRemaining = BREAK_DURATION;
@@ -112,9 +243,11 @@ function onWorkComplete() {
 }
 
 function onBreakComplete() {
-  showModal('Break over!', 'Ready to start your next 60-minute work session?', () => {
+  playCalmingSound('end');
+  const mins = getWorkDurationMinutes();
+  showModal('Break over!', `Ready to start your next ${mins}-minute work session?`, () => {
     state.mode = 'work';
-    state.timeRemaining = WORK_DURATION;
+    state.timeRemaining = getWorkDurationSeconds();
     state.isPaused = false;
     state.intervalId = setInterval(tick, 1000);
     updateDisplay();
@@ -144,6 +277,7 @@ function startTimer() {
   if (state.intervalId) return;
   state.isPaused = false;
   state.intervalId = setInterval(tick, 1000);
+  playCalmingSound('start');
   updateDisplay();
 }
 
@@ -152,6 +286,7 @@ function pauseTimer() {
   clearInterval(state.intervalId);
   state.intervalId = null;
   state.isPaused = true;
+  playCalmingSound('pause');
   updateDisplay();
 }
 
@@ -168,16 +303,78 @@ function resetTimer() {
   state.intervalId = null;
   state.isPaused = true;
   state.timeRemaining = getCurrentDuration();
+  playCalmingSound('reset');
   updateDisplay();
 }
 
 function resetSessionCount() {
   localStorage.setItem(STORAGE_KEY, '0');
+  playCalmingSound('resetSessions');
   updateDisplay();
 }
 
-elements.startPauseBtn.addEventListener('click', toggleStartPause);
-elements.resetBtn.addEventListener('click', resetTimer);
-elements.resetSessionsBtn?.addEventListener('click', resetSessionCount);
+document.addEventListener('click', unlockAudioOnInteraction);
+document.addEventListener('touchstart', unlockAudioOnInteraction, { passive: true });
+
+elements.startPauseBtn.addEventListener('click', () => {
+  unlockAudioOnInteraction();
+  toggleStartPause();
+});
+elements.resetBtn.addEventListener('click', () => {
+  unlockAudioOnInteraction();
+  resetTimer();
+});
+elements.resetSessionsBtn?.addEventListener('click', () => {
+  unlockAudioOnInteraction();
+  resetSessionCount();
+});
+
+function showDurationPicker() {
+  if (!elements.durationPickerOverlay) return;
+  elements.durationPickerOverlay.classList.add('visible');
+  elements.durationPickerOverlay.setAttribute('aria-hidden', 'false');
+}
+
+function hideDurationPicker() {
+  if (!elements.durationPickerOverlay) return;
+  elements.durationPickerOverlay.classList.remove('visible');
+  elements.durationPickerOverlay.setAttribute('aria-hidden', 'true');
+}
+
+function selectDuration(minutes) {
+  setWorkDurationMinutes(minutes);
+  state.timeRemaining = getWorkDurationSeconds();
+  state.mode = 'work';
+  hideDurationPicker();
+  playCalmingSound('start');
+  updateDisplay();
+}
+
+function initApp() {
+  const hasDuration = localStorage.getItem(STORAGE_KEY_DURATION) !== null;
+  if (hasDuration) {
+    state.timeRemaining = getWorkDurationSeconds();
+    updateDisplay();
+  } else {
+    showDurationPicker();
+  }
+}
+
+elements.durationPickerOverlay?.querySelectorAll('.btn-duration').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    unlockAudioOnInteraction();
+    const minutes = parseInt(btn.dataset.minutes, 10);
+    selectDuration(minutes);
+  });
+});
+
+elements.changeDurationBtn?.addEventListener('click', () => {
+  unlockAudioOnInteraction();
+  clearInterval(state.intervalId);
+  state.intervalId = null;
+  state.isPaused = true;
+  showDurationPicker();
+});
 
 updateDisplay();
+initApp();
