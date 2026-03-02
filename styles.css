@@ -60,17 +60,29 @@ h1 {
   width: min(200px, 50vw);
   max-width: 100%;
   margin: 0 auto 1.25rem;
+  perspective: 600px;
+}
+
+.tomato-3d-scene {
+  width: 100%;
+  aspect-ratio: 1;
+  transform-style: preserve-3d;
+  transform: rotateY(-15deg);
+}
+
+.tomato-3d-rot {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  transition: transform 0.5s ease-out;
 }
 
 .tomato-svg {
   width: 100%;
-  height: auto;
+  height: 100%;
+  display: block;
   filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
-}
-
-#tomatoBody {
-  transform-origin: 50% 50%;
-  transition: transform 0.5s ease-out;
 }
 
 .controls {

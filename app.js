@@ -156,7 +156,7 @@ function updateUI() {
   const progress = 1 - state.timeRemaining / totalDuration;
   const rotation = progress * 360;
   if (elements.tomatoBody) {
-    elements.tomatoBody.style.transform = `rotate(${rotation}deg)`;
+    elements.tomatoBody.style.transform = `rotateX(${rotation}deg)`;
   }
   const tomatoTimer = document.getElementById('tomatoTimer');
   if (tomatoTimer) {
@@ -184,11 +184,76 @@ function incrementTotalSessions() {
   localStorage.setItem(STORAGE_KEY, total.toString());
 }
 
+function launchConfetti() {
+  const colors = ['#e63946', '#ff8a80', '#ffd166', '#06d6a0', '#118ab2', '#ef476f', '#ffc43d', '#fff'];
+  const particleCount = 120;
+  const duration = 4000;
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  let w = canvas.width = window.innerWidth;
+  let h = canvas.height = window.innerHeight;
+  window.addEventListener('resize', () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; });
+
+  const cx = w / 2;
+  const cy = h / 2;
+  const particles = [];
+  for (let i = 0; i < particleCount; i++) {
+    const angle = (i / particleCount) * Math.PI * 2 + Math.random() * 0.5;
+    const speed = 4 + Math.random() * 10;
+    particles.push({
+      x: cx,
+      y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 6,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 20,
+      shape: Math.random() > 0.5 ? 'rect' : 'circle'
+    });
+  }
+
+  const startTime = performance.now();
+  function animate(now) {
+    const elapsed = now - startTime;
+    if (elapsed > duration) {
+      canvas.remove();
+      return;
+    }
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.15;
+      p.vx *= 0.99;
+      p.vy *= 0.99;
+      p.rotation += p.rotationSpeed;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate((p.rotation * Math.PI) / 180);
+      ctx.fillStyle = p.color;
+      if (p.shape === 'rect') {
+        ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+}
+
 function transitionToNextPhase() {
   clearInterval(state.intervalId);
   state.intervalId = null;
 
   if (state.phase === 'work') {
+    launchConfetti();
     state.sessionsInCycle++;
     incrementTotalSessions();
 
@@ -282,4 +347,27 @@ elements.resetSessionsBtn.addEventListener('click', (e) => {
   resetSessionCount();
 });
 
+function initTomatoNotches() {
+  const notchesGroup = document.querySelector('.tomato-notches');
+  if (!notchesGroup) return;
+  const cx = 100, cy = 100, innerR = 66, outerR = 72;
+  for (let i = 0; i < 60; i++) {
+    const angle = (i / 60) * 2 * Math.PI - Math.PI / 2;
+    const x1 = cx + innerR * Math.cos(angle);
+    const y1 = cy - innerR * Math.sin(angle);
+    const x2 = cx + outerR * Math.cos(angle);
+    const y2 = cy - outerR * Math.sin(angle);
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x1);
+    line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2);
+    line.setAttribute('y2', y2);
+    line.setAttribute('stroke', 'rgba(0,0,0,0.4)');
+    line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('stroke-linecap', 'round');
+    notchesGroup.appendChild(line);
+  }
+}
+
+initTomatoNotches();
 updateUI();
