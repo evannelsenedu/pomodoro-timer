@@ -194,7 +194,9 @@ body {
   margin-bottom: 0.5rem;
 }
 
-.stats #sessionCount {
+.stats #sessionCountToday,
+.stats #sessionCountWeek,
+.stats #sessionCountTotal {
   font-weight: 600;
   color: #333;
 }

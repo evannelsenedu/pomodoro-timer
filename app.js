@@ -1,7 +1,38 @@
 const WORK_DURATION_OPTIONS = [30, 45, 60, 75, 90]; // minutes
 const BREAK_DURATION = 10 * 60; // 10 minutes in seconds
 const STORAGE_KEY = 'pomodoroTotalSessions';
+const STORAGE_KEY_HISTORY = 'pomodoroHistory';
 const STORAGE_KEY_DURATION = 'pomodoroWorkDurationMinutes';
+
+function getDateKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getHistory() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_HISTORY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveHistory(history) {
+  localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+}
+
+function migrateToHistory() {
+  const history = getHistory();
+  if (Object.keys(history).length > 0) return;
+  const oldTotal = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+  if (oldTotal > 0) {
+    const today = getDateKey();
+    saveHistory({ [today]: oldTotal });
+    localStorage.removeItem(STORAGE_KEY);
+  }
+}
 
 const state = {
   mode: 'work', // 'work' | 'break'
@@ -28,7 +59,9 @@ const elements = {
   timerDisplay: document.getElementById('timerDisplay'),
   startPauseBtn: document.getElementById('startPauseBtn'),
   resetBtn: document.getElementById('resetBtn'),
-  sessionCount: document.getElementById('sessionCount'),
+  sessionCountToday: document.getElementById('sessionCountToday'),
+  sessionCountWeek: document.getElementById('sessionCountWeek'),
+  sessionCountTotal: document.getElementById('sessionCountTotal'),
   resetSessionsBtn: document.getElementById('resetSessionsBtn'),
   progressCircles: document.getElementById('progressCircles'),
   title: document.querySelector('.title'),
@@ -184,9 +217,9 @@ function updateProgressCircles() {
 function updateDisplay() {
   elements.timerDisplay.textContent = formatTime(state.timeRemaining);
   elements.startPauseBtn.textContent = state.isPaused ? 'Start' : 'Pause';
-  if (elements.sessionCount) {
-    elements.sessionCount.textContent = getTotalSessions();
-  }
+  if (elements.sessionCountToday) elements.sessionCountToday.textContent = getSessionsToday();
+  if (elements.sessionCountWeek) elements.sessionCountWeek.textContent = getSessionsThisWeek();
+  if (elements.sessionCountTotal) elements.sessionCountTotal.textContent = getTotalSessions();
   if (elements.title) {
     elements.title.textContent = state.mode === 'work' ? 'Pomodoro Timer' : 'Break Time';
   }
@@ -194,12 +227,34 @@ function updateDisplay() {
 }
 
 function getTotalSessions() {
-  return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+  const history = getHistory();
+  return Object.values(history).reduce((sum, n) => sum + (typeof n === 'number' ? n : 0), 0);
+}
+
+function getSessionsToday() {
+  const history = getHistory();
+  const today = getDateKey();
+  return history[today] || 0;
+}
+
+function getSessionsThisWeek() {
+  const history = getHistory();
+  const today = getDateKey();
+  let sum = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    sum += history[key] || 0;
+  }
+  return sum;
 }
 
 function incrementTotalSessions() {
-  const total = getTotalSessions() + 1;
-  localStorage.setItem(STORAGE_KEY, total.toString());
+  const history = getHistory();
+  const today = getDateKey();
+  history[today] = (history[today] || 0) + 1;
+  saveHistory(history);
 }
 
 function fireConfetti() {
@@ -308,7 +363,7 @@ function resetTimer() {
 }
 
 function resetSessionCount() {
-  localStorage.setItem(STORAGE_KEY, '0');
+  saveHistory({});
   playCalmingSound('resetSessions');
   updateDisplay();
 }
@@ -351,6 +406,7 @@ function selectDuration(minutes) {
 }
 
 function initApp() {
+  migrateToHistory();
   const hasDuration = localStorage.getItem(STORAGE_KEY_DURATION) !== null;
   if (hasDuration) {
     state.timeRemaining = getWorkDurationSeconds();
