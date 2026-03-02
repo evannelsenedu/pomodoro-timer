@@ -29,43 +29,95 @@ function getAudioContext() {
   return audioContext;
 }
 
-function playCalmingSound(type) {
-  try {
-    const ctx = getAudioContext();
-    if (ctx.state === 'suspended') {
-      ctx.resume();
-    }
-
-    const playTone = (frequency, duration, startTime, waveType = 'sine') => {
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      oscillator.type = waveType;
-      oscillator.frequency.setValueAtTime(frequency, startTime);
-      gainNode.gain.setValueAtTime(0.15, startTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-      oscillator.start(startTime);
-      oscillator.stop(startTime + duration);
-    };
-
-    if (type === 'start') {
-      playTone(523.25, 0.15, 0);
-      playTone(659.25, 0.15, 0.12);
-      playTone(783.99, 0.2, 0.24);
-    } else if (type === 'end') {
-      playTone(523.25, 0.2, 0, 'sine');
-      playTone(659.25, 0.2, 0.15, 'sine');
-      playTone(783.99, 0.2, 0.3, 'sine');
-      playTone(1046.5, 0.4, 0.45, 'sine');
-    } else if (type === 'pause') {
-      playTone(783.99, 0.12, 0, 'sine');
-      playTone(659.25, 0.12, 0.1, 'sine');
-      playTone(523.25, 0.15, 0.2, 'sine');
-    }
-  } catch (e) {
-    console.warn('Audio not available:', e);
+async function ensureAudioReady() {
+  const ctx = getAudioContext();
+  if (ctx.state === 'suspended') {
+    await ctx.resume();
   }
+}
+
+function createBeepWav(frequency, duration) {
+  const sampleRate = 44100;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+  const writeStr = (offset, str) => {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const sample = Math.sin(2 * Math.PI * frequency * t) * 0.3 * (1 - i / numSamples);
+    view.setInt16(44 + i * 2, sample * 32767, true);
+  }
+  return URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
+}
+
+function playFallbackBeep() {
+  const url = createBeepWav(523.25, 0.2);
+  const audio = new Audio(url);
+  audio.volume = 0.5;
+  audio.play().catch(() => {});
+  setTimeout(() => URL.revokeObjectURL(url), 500);
+}
+
+function playCalmingSound(type) {
+  ensureAudioReady().then(() => {
+    try {
+      const ctx = getAudioContext();
+      if (ctx.state !== 'running') {
+        playFallbackBeep();
+        return;
+      }
+      const now = ctx.currentTime;
+
+      const playTone = (frequency, duration, startTime, waveType = 'sine') => {
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        oscillator.type = waveType;
+        oscillator.frequency.setValueAtTime(frequency, now + startTime);
+        gainNode.gain.setValueAtTime(0.3, now + startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + startTime + duration);
+        oscillator.start(now + startTime);
+        oscillator.stop(now + startTime + duration);
+      };
+
+      if (type === 'start') {
+        playTone(523.25, 0.15, 0);
+        playTone(659.25, 0.15, 0.12);
+        playTone(783.99, 0.2, 0.24);
+      } else if (type === 'end') {
+        playTone(523.25, 0.2, 0, 'sine');
+        playTone(659.25, 0.2, 0.15, 'sine');
+        playTone(783.99, 0.2, 0.3, 'sine');
+        playTone(1046.5, 0.4, 0.45, 'sine');
+      } else if (type === 'pause') {
+        playTone(783.99, 0.12, 0, 'sine');
+        playTone(659.25, 0.12, 0.1, 'sine');
+        playTone(523.25, 0.15, 0.2, 'sine');
+      }
+    } catch (e) {
+      playFallbackBeep();
+    }
+  });
+}
+
+function unlockAudioOnInteraction() {
+  ensureAudioReady();
 }
 
 function formatTime(seconds) {
@@ -186,15 +238,17 @@ function resetSessionCount() {
   updateUI();
 }
 
-function unlockAudio() {
-  getAudioContext().resume();
-}
+document.addEventListener('click', unlockAudioOnInteraction);
+document.addEventListener('touchstart', unlockAudioOnInteraction, { passive: true });
 
-document.addEventListener('click', unlockAudio, { once: true });
-document.addEventListener('touchstart', unlockAudio, { once: true });
-
-elements.startPauseBtn.addEventListener('click', toggleStartPause);
-elements.resetBtn.addEventListener('click', resetTimer);
+elements.startPauseBtn.addEventListener('click', (e) => {
+  unlockAudioOnInteraction();
+  toggleStartPause();
+});
+elements.resetBtn.addEventListener('click', (e) => {
+  unlockAudioOnInteraction();
+  resetTimer();
+});
 elements.resetSessionsBtn.addEventListener('click', resetSessionCount);
 
 updateUI();
