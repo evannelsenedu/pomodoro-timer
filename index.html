@@ -2,46 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Pomodoro Timer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>60 Minute Tomato Timer</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div class="progress-circles" id="progressCircles" aria-label="Session progress">
+    <div class="circle" data-index="0"></div>
+    <div class="circle" data-index="1"></div>
+    <div class="circle" data-index="2"></div>
+    <div class="circle" data-index="3"></div>
+    <div class="circle" data-index="4"></div>
+    <div class="circle" data-index="5"></div>
+  </div>
   <main class="container">
-    <h1>Pomodoro Timer</h1>
-    <p class="phase-indicator" id="phaseIndicator">Work Session</p>
-    <div class="tomato-timer" id="tomatoTimer" role="img" aria-label="">
-      <div class="tomato-3d-scene">
-        <div class="tomato-3d-rot" id="tomatoBody">
-          <svg viewBox="0 0 200 200" class="tomato-svg">
-            <defs>
-              <radialGradient id="tomatoGrad" cx="35%" cy="25%" r="70%">
-                <stop offset="0%" style="stop-color:#ff8a80"/>
-                <stop offset="40%" style="stop-color:#e63946"/>
-                <stop offset="100%" style="stop-color:#b71c1c"/>
-              </radialGradient>
-              <radialGradient id="tomatoHighlight" cx="30%" cy="20%" r="40%">
-                <stop offset="0%" style="stop-color:rgba(255,255,255,0.5)"/>
-                <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
-              </radialGradient>
-              <linearGradient id="stemGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style="stop-color:#2d6a4f"/>
-                <stop offset="100%" style="stop-color:#1b4332"/>
-              </linearGradient>
-            </defs>
-            <g class="tomato-core">
-              <circle cx="100" cy="100" r="70" fill="url(#tomatoGrad)" stroke="#8b0000" stroke-width="2"/>
-              <circle cx="100" cy="100" r="70" fill="url(#tomatoHighlight)"/>
-              <ellipse cx="85" cy="75" rx="8" ry="6" fill="rgba(255,255,255,0.4)"/>
-              <path d="M95 35 L100 25 L105 35 L100 42 Z" fill="url(#stemGrad)" stroke="#1b4332" stroke-width="2"/>
-              <ellipse cx="92" cy="38" rx="3" ry="5" fill="#40916c"/>
-              <ellipse cx="108" cy="38" rx="3" ry="5" fill="#40916c"/>
-            </g>
-            <g class="tomato-notches">
-              <!-- 60 notches around circumference, one per minute -->
-            </g>
-          </svg>
+    <h1 class="title">Pomodoro Timer</h1>
+    <div class="tomato-logo" role="img" aria-label="Tomato timer logo">
+      <div class="tomato-body">
+        <div class="timer-content">
+          <div class="timer-display" id="timerDisplay">60:00</div>
         </div>
+      </div>
+      <div class="tomato-leaves">
+        <div class="leaf left"></div>
+        <div class="leaf right"></div>
       </div>
     </div>
     <div class="controls">
@@ -54,6 +38,15 @@
     </div>
     <button type="button" class="btn btn-link" id="resetSessionsBtn">Reset session count</button>
   </main>
+  <!-- Modal for break/work prompts -->
+  <div class="modal-overlay" id="modalOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-labelledby="modalTitle" aria-describedby="modalMessage">
+      <h2 id="modalTitle" class="modal-title"></h2>
+      <p id="modalMessage" class="modal-message"></p>
+      <button type="button" class="btn btn-primary modal-btn" id="modalApproveBtn">Start</button>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

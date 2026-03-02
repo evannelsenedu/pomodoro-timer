@@ -7,185 +7,251 @@
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
-  min-height: 100dvh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.5s ease;
-  position: relative;
-  overflow-x: hidden;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: #f8f6f1;
+  padding: 1rem;
 }
 
-/* Pomodoro red background */
-body {
-  background: #c0392b;
+/* Progress circles - 6 circles at top, fill left to right */
+.progress-circles {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 10;
 }
 
-body.phase-work {
-  background: #c0392b;
-}
-
-body.phase-shortBreak {
-  background: #a93226;
-}
-
-body.phase-longBreak {
-  background: #922b21;
+.progress-circles .circle {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  --progress: 0;
+  background: conic-gradient(
+    from 0deg,
+    rgba(230, 57, 70, 0.55) 0deg,
+    rgba(230, 57, 70, 0.55) calc(var(--progress) * 360deg),
+    rgba(0, 0, 0, 0.1) calc(var(--progress) * 360deg),
+    rgba(0, 0, 0, 0.1) 360deg
+  );
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  transition: background 0.4s ease;
 }
 
 .container {
   text-align: center;
-  padding: 1rem;
-  padding-bottom: 2rem;
-  max-width: 400px;
+  max-width: 360px;
   width: 100%;
 }
 
-h1 {
-  color: #fff;
+.title {
+  color: #333;
   font-size: 1.5rem;
   font-weight: 600;
-  margin-bottom: 0.25rem;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-
-.phase-indicator {
-  color: rgba(255,255,255,0.9);
-  font-size: 0.9rem;
   margin-bottom: 1rem;
 }
 
-.tomato-timer {
-  width: min(200px, 50vw);
-  max-width: 100%;
-  margin: 0 auto 1.25rem;
-  perspective: 600px;
+/* Tomato logo - no background, transparent around the graphic */
+.tomato-logo {
+  width: 260px;
+  height: 300px;
+  margin: 0 auto 1.5rem;
+  position: relative;
+  background: transparent;
 }
 
-.tomato-3d-scene {
+/* Cartoony pomodoro red tomato body with strong 3D shadow */
+.tomato-body {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 200px;
+  height: 200px;
+  margin-left: -100px;
+  margin-top: -100px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #e63946 0%, #d62828 40%, #c1121f 100%);
+  box-shadow:
+    inset -12px -18px 40px rgba(0, 0, 0, 0.3),
+    inset 14px 14px 35px rgba(255, 255, 255, 0.35),
+    0 20px 45px rgba(0, 0, 0, 0.35),
+    0 35px 70px rgba(0, 0, 0, 0.25),
+    0 50px 100px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  border: 3px solid rgba(180, 30, 30, 0.6);
+}
+
+/* Obvious cartoony leaves - connected to top of tomato */
+.tomato-leaves {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: 100px;
+  height: 55px;
+  margin-left: -50px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.leaf {
+  position: absolute;
+  width: 48px;
+  height: 36px;
+  background: linear-gradient(135deg, #228b22 0%, #2d8a3e 50%, #1a6b1a 100%);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(0, 0, 0, 0.15);
+}
+
+.leaf.left {
+  left: -5px;
+  top: 12px;
+  transform: rotate(-35deg);
+}
+
+.leaf.right {
+  right: -5px;
+  left: auto;
+  top: 12px;
+  transform: rotate(35deg);
+}
+
+/* Timer content - centered in tomato */
+.timer-content {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   width: 100%;
-  aspect-ratio: 1;
-  transform-style: preserve-3d;
-  transform: rotateY(-15deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
-.tomato-3d-rot {
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  transform-origin: center center;
-  transition: transform 0.5s ease-out;
+.timer-display {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 0 2px rgba(0, 0, 0, 0.8);
 }
 
-.tomato-svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
+.tomato-body .timer-display {
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 0 2px rgba(0, 0, 0, 0.8);
 }
 
+/* Controls */
 .controls {
   display: flex;
   gap: 0.75rem;
   justify-content: center;
-  margin-bottom: 1.25rem;
 }
 
 .btn {
-  padding: 0.6rem 1.25rem;
-  font-size: 0.95rem;
+  padding: 0.65rem 1.5rem;
+  font-size: 1rem;
   font-weight: 600;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn:hover {
-  transform: scale(1.02);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .btn:active {
   transform: scale(0.98);
 }
 
-.btn-primary {
-  background: #fff;
-  color: #c0392b;
-  min-width: 120px;
-}
-
-.btn-primary:hover {
-  background: #f5f5f5;
-}
-
+.btn-primary,
 .btn-secondary {
-  background: rgba(255,255,255,0.2);
+  background: #5c6bc0;
   color: #fff;
-  border: 2px solid rgba(255,255,255,0.5);
+  min-width: 100px;
 }
 
+.btn-primary:hover,
 .btn-secondary:hover {
-  background: rgba(255,255,255,0.3);
-}
-
-.btn-link {
-  background: transparent;
-  color: rgba(255,255,255,0.9);
-  font-size: 0.875rem;
-}
-
-.btn-link:hover {
+  background: #1a237e;
   color: #fff;
 }
 
 .stats {
-  color: rgba(255,255,255,0.9);
+  color: #555;
   font-size: 1rem;
+  margin-top: 1rem;
   margin-bottom: 0.5rem;
 }
 
 .stats #sessionCount {
   font-weight: 600;
-  color: #fff;
+  color: #333;
 }
 
-@media (max-width: 480px) {
-  .container {
-    padding: 0.75rem;
-    padding-bottom: 1.5rem;
-  }
+.btn-link {
+  background: transparent;
+  color: #555;
+  font-size: 0.875rem;
+  border: 1px solid #ccc;
+}
 
-  h1 {
-    font-size: 1.25rem;
-  }
+.btn-link:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
 
-  .phase-indicator {
-    font-size: 0.85rem;
-    margin-bottom: 0.75rem;
-  }
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
 
-  .tomato-timer {
-    width: min(160px, 55vw);
-    margin-bottom: 1rem;
-  }
+.modal-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
 
-  .controls {
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
 
-  .btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-  }
+.modal-title {
+  font-size: 1.25rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
 
-  .stats {
-    font-size: 0.9rem;
-  }
+.modal-message {
+  color: #555;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
 
-  .btn-link {
-    font-size: 0.8rem;
-  }
+.modal-btn {
+  min-width: 140px;
 }
