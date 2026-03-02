@@ -1,0 +1,120 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.5s ease;
+}
+
+/* Phase-based background colors */
+body.phase-work {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+body.phase-shortBreak {
+  background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+}
+
+body.phase-longBreak {
+  background: linear-gradient(135deg, #0d7377 0%, #0f3460 100%);
+}
+
+.container {
+  text-align: center;
+  padding: 2rem;
+  max-width: 400px;
+}
+
+h1 {
+  color: #eee;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.phase-indicator {
+  color: #aaa;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.timer-display {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  margin-bottom: 2rem;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:hover {
+  transform: scale(1.02);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: #e94560;
+  color: #fff;
+  min-width: 120px;
+}
+
+.btn-primary:hover {
+  background: #ff6b6b;
+}
+
+.btn-secondary {
+  background: #374151;
+  color: #e5e7eb;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+}
+
+.btn-link {
+  background: transparent;
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.btn-link:hover {
+  color: #d1d5db;
+}
+
+.stats {
+  color: #9ca3af;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.stats #sessionCount {
+  font-weight: 600;
+  color: #e5e7eb;
+}
