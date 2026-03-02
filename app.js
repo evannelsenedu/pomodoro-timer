@@ -12,7 +12,7 @@ const state = {
 };
 
 const elements = {
-  timerDisplay: document.getElementById('timerDisplay'),
+  clockDial: document.getElementById('clockDial'),
   phaseIndicator: document.getElementById('phaseIndicator'),
   startPauseBtn: document.getElementById('startPauseBtn'),
   resetBtn: document.getElementById('resetBtn'),
@@ -142,8 +142,27 @@ function getPhaseLabel(phase) {
   }
 }
 
+function getPhaseDuration(phase) {
+  switch (phase) {
+    case 'work': return WORK_DURATION;
+    case 'shortBreak': return SHORT_BREAK_DURATION;
+    case 'longBreak': return LONG_BREAK_DURATION;
+    default: return WORK_DURATION;
+  }
+}
+
 function updateUI() {
-  elements.timerDisplay.textContent = formatTime(state.timeRemaining);
+  const totalDuration = getPhaseDuration(state.phase);
+  const progress = 1 - state.timeRemaining / totalDuration;
+  const rotation = progress * 360;
+  if (elements.clockDial) {
+    elements.clockDial.style.transform = `rotate(${rotation}deg)`;
+  }
+  const tomatoClock = document.getElementById('tomatoClock');
+  if (tomatoClock) {
+    const mins = Math.floor(state.timeRemaining / 60);
+    tomatoClock.setAttribute('aria-label', `Pomodoro timer: ${mins} minutes remaining`);
+  }
   elements.phaseIndicator.textContent = getPhaseLabel(state.phase);
   elements.sessionCount.textContent = getTotalSessions();
 

@@ -83,13 +83,30 @@ h1 {
   margin-bottom: 1rem;
 }
 
-.timer-display {
-  font-size: 3.5rem;
-  font-weight: 700;
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.05em;
-  margin-bottom: 1.25rem;
+.tomato-clock {
+  width: min(280px, 75vw);
+  max-width: 100%;
+  margin: 0 auto 1.25rem;
+}
+
+.tomato-clock-svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+}
+
+.dial-num {
+  font: bold 14px system-ui, sans-serif;
+  fill: #333;
+}
+
+#clockDial {
+  transform-origin: 50% 50%;
+  transition: transform 0.5s ease-out;
+}
+
+.clock-pointer {
+  pointer-events: none;
 }
 
 .controls {
@@ -172,9 +189,13 @@ h1 {
     margin-bottom: 0.75rem;
   }
 
-  .timer-display {
-    font-size: 2.75rem;
+  .tomato-clock {
+    width: min(220px, 70vw);
     margin-bottom: 1rem;
+  }
+
+  .dial-num {
+    font-size: 12px;
   }
 
   .controls {
