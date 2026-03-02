@@ -11,6 +11,38 @@ body {
   align-items: center;
   justify-content: center;
   transition: background-color 0.5s ease;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.mascot {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.mascot-img {
+  width: 120px;
+  height: auto;
+  animation: mascotStudying 4s ease-in-out infinite;
+}
+
+@keyframes mascotStudying {
+  0%, 100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  25% {
+    transform: translateY(-8px) rotate(2deg) scale(1.02);
+  }
+  50% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  75% {
+    transform: translateY(-6px) rotate(1deg) scale(1.01);
+  }
 }
 
 /* Phase-based background colors */
@@ -29,6 +61,7 @@ body.phase-longBreak {
 .container {
   text-align: center;
   padding: 2rem;
+  padding-bottom: 8rem;
   max-width: 400px;
 }
 
@@ -117,4 +150,10 @@ h1 {
 .stats #sessionCount {
   font-weight: 600;
   color: #e5e7eb;
+}
+
+@media (max-width: 480px) {
+  .mascot-img {
+    width: 90px;
+  }
 }

@@ -20,6 +20,54 @@ const elements = {
   resetSessionsBtn: document.getElementById('resetSessionsBtn')
 };
 
+let audioContext = null;
+
+function getAudioContext() {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return audioContext;
+}
+
+function playCalmingSound(type) {
+  try {
+    const ctx = getAudioContext();
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+
+    const playTone = (frequency, duration, startTime, waveType = 'sine') => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      oscillator.type = waveType;
+      oscillator.frequency.setValueAtTime(frequency, startTime);
+      gainNode.gain.setValueAtTime(0.15, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    };
+
+    if (type === 'start') {
+      playTone(523.25, 0.15, 0);
+      playTone(659.25, 0.15, 0.12);
+      playTone(783.99, 0.2, 0.24);
+    } else if (type === 'end') {
+      playTone(523.25, 0.2, 0, 'sine');
+      playTone(659.25, 0.2, 0.15, 'sine');
+      playTone(783.99, 0.2, 0.3, 'sine');
+      playTone(1046.5, 0.4, 0.45, 'sine');
+    } else if (type === 'pause') {
+      playTone(783.99, 0.12, 0, 'sine');
+      playTone(659.25, 0.12, 0.1, 'sine');
+      playTone(523.25, 0.15, 0.2, 'sine');
+    }
+  } catch (e) {
+    console.warn('Audio not available:', e);
+  }
+}
+
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
@@ -83,6 +131,7 @@ function transitionToNextPhase() {
   }
 
   state.isPaused = true;
+  playCalmingSound('end');
   updateUI();
 }
 
@@ -101,6 +150,7 @@ function startTimer() {
 
   state.isPaused = false;
   state.intervalId = setInterval(tick, 1000);
+  playCalmingSound('start');
   updateUI();
 }
 
@@ -110,6 +160,7 @@ function pauseTimer() {
   clearInterval(state.intervalId);
   state.intervalId = null;
   state.isPaused = true;
+  playCalmingSound('pause');
   updateUI();
 }
 
@@ -134,6 +185,13 @@ function resetSessionCount() {
   localStorage.setItem(STORAGE_KEY, '0');
   updateUI();
 }
+
+function unlockAudio() {
+  getAudioContext().resume();
+}
+
+document.addEventListener('click', unlockAudio, { once: true });
+document.addEventListener('touchstart', unlockAudio, { once: true });
 
 elements.startPauseBtn.addEventListener('click', toggleStartPause);
 elements.resetBtn.addEventListener('click', resetTimer);
