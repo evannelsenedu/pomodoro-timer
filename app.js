@@ -12,7 +12,7 @@ const state = {
 };
 
 const elements = {
-  clockDial: document.getElementById('clockDial'),
+  tomatoBody: document.getElementById('tomatoBody'),
   phaseIndicator: document.getElementById('phaseIndicator'),
   startPauseBtn: document.getElementById('startPauseBtn'),
   resetBtn: document.getElementById('resetBtn'),
@@ -155,13 +155,13 @@ function updateUI() {
   const totalDuration = getPhaseDuration(state.phase);
   const progress = 1 - state.timeRemaining / totalDuration;
   const rotation = progress * 360;
-  if (elements.clockDial) {
-    elements.clockDial.style.transform = `rotate(${rotation}deg)`;
+  if (elements.tomatoBody) {
+    elements.tomatoBody.style.transform = `rotate(${rotation}deg)`;
   }
-  const tomatoClock = document.getElementById('tomatoClock');
-  if (tomatoClock) {
+  const tomatoTimer = document.getElementById('tomatoTimer');
+  if (tomatoTimer) {
     const mins = Math.floor(state.timeRemaining / 60);
-    tomatoClock.setAttribute('aria-label', `Pomodoro timer: ${mins} minutes remaining`);
+    tomatoTimer.setAttribute('aria-label', `Pomodoro timer: ${mins} minutes remaining`);
   }
   elements.phaseIndicator.textContent = getPhaseLabel(state.phase);
   elements.sessionCount.textContent = getTotalSessions();

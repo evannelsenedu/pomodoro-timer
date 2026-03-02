@@ -7,50 +7,33 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="mascot" aria-hidden="true">
-    <img src="mascot.png" alt="Tommy Timer - Pomodoro mascot studying" class="mascot-img">
-  </div>
   <main class="container">
     <h1>Pomodoro Timer</h1>
     <p class="phase-indicator" id="phaseIndicator">Work Session</p>
-    <div class="tomato-clock" id="tomatoClock" role="img" aria-label="">
-      <svg viewBox="0 0 200 220" class="tomato-clock-svg">
+    <div class="tomato-timer" id="tomatoTimer" role="img" aria-label="">
+      <svg viewBox="0 0 200 200" class="tomato-svg">
         <defs>
-          <linearGradient id="tomatoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#ff6b6b"/>
-            <stop offset="100%" style="stop-color:#e63946"/>
-          </linearGradient>
+          <radialGradient id="tomatoGrad" cx="35%" cy="25%" r="70%">
+            <stop offset="0%" style="stop-color:#ff8a80"/>
+            <stop offset="40%" style="stop-color:#e63946"/>
+            <stop offset="100%" style="stop-color:#b71c1c"/>
+          </radialGradient>
+          <radialGradient id="tomatoHighlight" cx="30%" cy="20%" r="40%">
+            <stop offset="0%" style="stop-color:rgba(255,255,255,0.5)"/>
+            <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
+          </radialGradient>
           <linearGradient id="stemGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" style="stop-color:#2d6a4f"/>
             <stop offset="100%" style="stop-color:#1b4332"/>
           </linearGradient>
         </defs>
-        <g class="tomato-body">
-          <ellipse cx="100" cy="115" rx="75" ry="80" fill="url(#tomatoGrad)" stroke="#c1121f" stroke-width="3"/>
-          <ellipse cx="85" cy="95" rx="15" ry="12" fill="rgba(255,255,255,0.25)" opacity="0.9"/>
-        </g>
-        <g class="clock-dial" id="clockDial">
-          <circle cx="100" cy="115" r="52" fill="rgba(255,255,255,0.95)" stroke="#333" stroke-width="2"/>
-          <text x="100" y="73" class="dial-num" text-anchor="middle">60</text>
-          <text x="121" y="79" class="dial-num" text-anchor="middle">55</text>
-          <text x="136" y="94" class="dial-num" text-anchor="middle">50</text>
-          <text x="142" y="115" class="dial-num" text-anchor="middle">45</text>
-          <text x="136" y="136" class="dial-num" text-anchor="middle">40</text>
-          <text x="121" y="151" class="dial-num" text-anchor="middle">35</text>
-          <text x="100" y="157" class="dial-num" text-anchor="middle">30</text>
-          <text x="79" y="151" class="dial-num" text-anchor="middle">25</text>
-          <text x="64" y="136" class="dial-num" text-anchor="middle">20</text>
-          <text x="58" y="115" class="dial-num" text-anchor="middle">15</text>
-          <text x="64" y="94" class="dial-num" text-anchor="middle">10</text>
-          <text x="79" y="79" class="dial-num" text-anchor="middle">5</text>
-        </g>
-        <g class="tomato-stem">
-          <path d="M95 35 L100 25 L105 35 L100 45 Z" fill="url(#stemGrad)" stroke="#1b4332" stroke-width="2"/>
-          <ellipse cx="92" cy="38" rx="4" ry="6" fill="#40916c"/>
-          <ellipse cx="108" cy="38" rx="4" ry="6" fill="#40916c"/>
-        </g>
-        <g class="clock-pointer">
-          <path d="M100 65 L95 85 L105 85 Z" fill="#333" stroke="#111" stroke-width="1"/>
+        <g class="tomato-rotating" id="tomatoBody">
+          <circle cx="100" cy="100" r="70" fill="url(#tomatoGrad)" stroke="#8b0000" stroke-width="2"/>
+          <circle cx="100" cy="100" r="70" fill="url(#tomatoHighlight)"/>
+          <ellipse cx="85" cy="75" rx="8" ry="6" fill="rgba(255,255,255,0.4)"/>
+          <path d="M95 35 L100 25 L105 35 L100 42 Z" fill="url(#stemGrad)" stroke="#1b4332" stroke-width="2"/>
+          <ellipse cx="92" cy="38" rx="3" ry="5" fill="#40916c"/>
+          <ellipse cx="108" cy="38" rx="3" ry="5" fill="#40916c"/>
         </g>
       </svg>
     </div>
