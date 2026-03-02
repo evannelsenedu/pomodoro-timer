@@ -109,6 +109,13 @@ function playCalmingSound(type) {
         playTone(783.99, 0.12, 0, 'sine');
         playTone(659.25, 0.12, 0.1, 'sine');
         playTone(523.25, 0.15, 0.2, 'sine');
+      } else if (type === 'reset') {
+        playTone(392, 0.08, 0, 'sine');
+        playTone(329.63, 0.08, 0.06, 'sine');
+        playTone(261.63, 0.12, 0.12, 'sine');
+      } else if (type === 'resetSessions') {
+        playTone(523.25, 0.1, 0, 'sine');
+        playTone(392, 0.15, 0.08, 'sine');
       }
     } catch (e) {
       playFallbackBeep();
@@ -230,11 +237,13 @@ function resetTimer() {
   state.isPaused = true;
   state.phase = 'work';
   state.timeRemaining = WORK_DURATION;
+  playCalmingSound('reset');
   updateUI();
 }
 
 function resetSessionCount() {
   localStorage.setItem(STORAGE_KEY, '0');
+  playCalmingSound('resetSessions');
   updateUI();
 }
 
@@ -249,6 +258,9 @@ elements.resetBtn.addEventListener('click', (e) => {
   unlockAudioOnInteraction();
   resetTimer();
 });
-elements.resetSessionsBtn.addEventListener('click', resetSessionCount);
+elements.resetSessionsBtn.addEventListener('click', (e) => {
+  unlockAudioOnInteraction();
+  resetSessionCount();
+});
 
 updateUI();
