@@ -199,10 +199,16 @@ function updateProgressCircles() {
   const circles = elements.progressCircles?.querySelectorAll('.circle');
   if (!circles || circles.length === 0) return;
 
-  const completedSessions = getTotalSessions();
+  const totalSessions = getTotalSessions();
+  // Circles represent current 6-session cycle
+  let completedSessions = totalSessions % 6;
+  if (completedSessions === 0 && totalSessions > 0 && state.mode === 'break') {
+    completedSessions = 6; // keep all 6 filled during break after completing cycle
+  }
+
   const duration = getCurrentDuration();
   const timeElapsed = duration - state.timeRemaining;
-  const currentProgress = Math.min(1, timeElapsed / duration);
+  const currentProgress = duration > 0 ? Math.min(1, timeElapsed / duration) : 0;
 
   circles.forEach((circle, i) => {
     let progress = 0;
