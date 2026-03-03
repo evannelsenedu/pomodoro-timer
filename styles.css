@@ -103,11 +103,11 @@ body {
   inset: 0;
 }
 
-/* Timer content - centered in tomato's inner circle */
+/* Timer content - centered in tomato's tummy circle (slightly lower for face above) */
 .timer-content {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 54%;
   transform: translate(-50%, -50%);
   width: 100%;
   display: flex;
