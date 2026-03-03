@@ -38,7 +38,8 @@ const state = {
   mode: 'work', // 'work' | 'break'
   timeRemaining: 0, // set on init
   isPaused: true,
-  intervalId: null
+  intervalId: null,
+  timerEndTime: null // Date.now() + seconds when timer started
 };
 
 function getWorkDurationMinutes() {
@@ -292,6 +293,7 @@ function onWorkComplete() {
     state.mode = 'break';
     state.timeRemaining = BREAK_DURATION;
     state.isPaused = false;
+    state.timerEndTime = Date.now() + state.timeRemaining * 1000;
     state.intervalId = setInterval(tick, 1000);
     updateDisplay();
   });
@@ -304,15 +306,20 @@ function onBreakComplete() {
     state.mode = 'work';
     state.timeRemaining = getWorkDurationSeconds();
     state.isPaused = false;
+    state.timerEndTime = Date.now() + state.timeRemaining * 1000;
     state.intervalId = setInterval(tick, 1000);
     updateDisplay();
   });
 }
 
 function tick() {
-  if (state.timeRemaining <= 0) {
+  const remaining = Math.max(0, Math.floor((state.timerEndTime - Date.now()) / 1000));
+  state.timeRemaining = remaining;
+
+  if (remaining <= 0) {
     clearInterval(state.intervalId);
     state.intervalId = null;
+    state.timerEndTime = null;
     state.isPaused = true;
     if (state.mode === 'work') {
       incrementTotalSessions();
@@ -324,13 +331,13 @@ function tick() {
     }
     return;
   }
-  state.timeRemaining--;
   updateDisplay();
 }
 
 function startTimer() {
   if (state.intervalId) return;
   state.isPaused = false;
+  state.timerEndTime = Date.now() + state.timeRemaining * 1000;
   state.intervalId = setInterval(tick, 1000);
   playCalmingSound('start');
   updateDisplay();
@@ -340,6 +347,7 @@ function pauseTimer() {
   if (!state.intervalId) return;
   clearInterval(state.intervalId);
   state.intervalId = null;
+  state.timerEndTime = null;
   state.isPaused = true;
   playCalmingSound('pause');
   updateDisplay();
@@ -356,6 +364,7 @@ function toggleStartPause() {
 function resetTimer() {
   clearInterval(state.intervalId);
   state.intervalId = null;
+  state.timerEndTime = null;
   state.isPaused = true;
   state.timeRemaining = getCurrentDuration();
   playCalmingSound('reset');
@@ -370,6 +379,12 @@ function resetSessionCount() {
 
 document.addEventListener('click', unlockAudioOnInteraction);
 document.addEventListener('touchstart', unlockAudioOnInteraction, { passive: true });
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && state.intervalId) {
+    tick();
+  }
+});
 
 elements.startPauseBtn.addEventListener('click', () => {
   unlockAudioOnInteraction();
@@ -400,6 +415,7 @@ function selectDuration(minutes) {
   setWorkDurationMinutes(minutes);
   state.timeRemaining = getWorkDurationSeconds();
   state.mode = 'work';
+  state.timerEndTime = null;
   hideDurationPicker();
   playCalmingSound('start');
   updateDisplay();
@@ -428,6 +444,7 @@ elements.changeDurationBtn?.addEventListener('click', () => {
   unlockAudioOnInteraction();
   clearInterval(state.intervalId);
   state.intervalId = null;
+  state.timerEndTime = null;
   state.isPaused = true;
   showDurationPicker();
 });
