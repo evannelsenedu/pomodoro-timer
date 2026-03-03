@@ -1,0 +1,14 @@
+{
+  "name": "POMMO",
+  "short_name": "POMMO",
+  "icons": [
+    {
+      "src": "pommo-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "display": "standalone",
+  "start_url": "."
+}

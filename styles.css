@@ -7,12 +7,14 @@
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: #f8f6f1;
   padding: 1rem;
+  overflow-y: auto;
 }
 
 /* Progress circles - 6 circles at top, fill left to right */
@@ -82,73 +84,26 @@ body {
   padding-right: 1.5em;
 }
 
-/* Tomato logo - no background, transparent around the graphic */
+/* Tomato logo - POMMO mascot image with timer in center */
 .tomato-logo {
   width: 260px;
-  height: 300px;
+  height: 260px;
   margin: 0 auto 1.5rem;
   position: relative;
-  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Cartoony pomodoro red tomato body with strong 3D shadow */
-.tomato-body {
+.tomato-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 200px;
-  height: 200px;
-  margin-left: -100px;
-  margin-top: -100px;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #e63946 0%, #d62828 40%, #c1121f 100%);
-  box-shadow:
-    inset -12px -18px 40px rgba(0, 0, 0, 0.3),
-    inset 14px 14px 35px rgba(255, 255, 255, 0.35),
-    0 20px 45px rgba(0, 0, 0, 0.35),
-    0 35px 70px rgba(0, 0, 0, 0.25),
-    0 50px 100px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  border: 3px solid rgba(180, 30, 30, 0.6);
+  inset: 0;
 }
 
-/* Obvious cartoony leaves - connected to top of tomato */
-.tomato-leaves {
-  position: absolute;
-  left: 50%;
-  top: 14px;
-  width: 100px;
-  height: 55px;
-  margin-left: -50px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.leaf {
-  position: absolute;
-  width: 48px;
-  height: 36px;
-  background: linear-gradient(135deg, #228b22 0%, #2d8a3e 50%, #1a6b1a 100%);
-  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-  border: 2px solid rgba(0, 0, 0, 0.15);
-}
-
-.leaf.left {
-  left: -5px;
-  top: 12px;
-  transform: rotate(-35deg);
-}
-
-.leaf.right {
-  right: -5px;
-  left: auto;
-  top: 12px;
-  transform: rotate(35deg);
-}
-
-/* Timer content - centered in tomato */
+/* Timer content - centered in tomato's inner circle */
 .timer-content {
   position: absolute;
   left: 50%;
@@ -159,20 +114,16 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
+  z-index: 1;
 }
 
 .timer-display {
   font-size: 2.5rem;
   font-weight: 800;
-  color: #fff;
+  color: #333;
   letter-spacing: 0.05em;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 0 2px rgba(0, 0, 0, 0.8);
-}
-
-.tomato-body .timer-display {
-  color: #fff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 0 2px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 /* Controls */
@@ -343,4 +294,64 @@ body {
   background: #1a237e;
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Landscape: compact layout so everything fits on screen */
+@media (orientation: landscape) and (max-height: 500px) {
+  body {
+    padding: 0.5rem;
+    justify-content: flex-start;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem 1.5rem;
+    max-width: none;
+    width: auto;
+  }
+
+  .title {
+    width: 100%;
+    font-size: 1.1rem;
+    margin-bottom: 0;
+    order: -3;
+  }
+
+  .quote {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    order: -2;
+  }
+
+  .tomato-logo {
+    width: 140px;
+    height: 140px;
+    margin: 0;
+    order: 0;
+  }
+
+  .timer-display {
+    font-size: 1.5rem;
+  }
+
+  .controls {
+    order: 1;
+    margin: 0;
+  }
+
+  .stats {
+    order: 2;
+    font-size: 0.85rem;
+    margin: 0;
+  }
+
+  .btn-link {
+    order: 3;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.75rem;
+  }
 }

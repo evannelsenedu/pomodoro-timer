@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>60 Minute Tomato Timer</title>
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icon.svg">
+  <title>POMMO</title>
+  <link rel="icon" href="pommo-logo.png" type="image/png">
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -34,14 +34,9 @@
     <h1 class="title">Pomodoro Timer</h1>
     <p class="quote">Do it for <select class="quote-select" id="quoteSelect" aria-label="Select who to do it for"><option value="" selected></option><option value="Lola">Lola</option></select></p>
     <div class="tomato-logo" role="img" aria-label="Tomato timer logo">
-      <div class="tomato-body">
-        <div class="timer-content">
-          <div class="timer-display" id="timerDisplay">60:00</div>
-        </div>
-      </div>
-      <div class="tomato-leaves">
-        <div class="leaf left"></div>
-        <div class="leaf right"></div>
+      <img src="pommo-logo.png" alt="" class="tomato-image">
+      <div class="timer-content">
+        <div class="timer-display" id="timerDisplay">60:00</div>
       </div>
     </div>
     <div class="controls">
