@@ -1,3 +1,8 @@
+/**
+ * POMMO - Pomodoro Timer (Web)
+ * Styles for timer UI, progress circles, modals, duration picker.
+ * Uses CSS custom properties for progress circles; no inline styles in markup.
+ */
 * {
   box-sizing: border-box;
   margin: 0;

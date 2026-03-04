@@ -1,6 +1,7 @@
 {
-  "name": "POMMO",
+  "name": "POMMO - Pomodoro Timer",
   "short_name": "POMMO",
+  "description": "Focus timer with work sessions, breaks, and progress tracking. All data stays on your device.",
   "icons": [
     {
       "src": "pommo-logo.png",
@@ -10,5 +11,8 @@
     }
   ],
   "display": "standalone",
-  "start_url": "."
+  "start_url": ".",
+  "theme_color": "#5c6bc0",
+  "background_color": "#f8f6f1",
+  "categories": ["productivity", "utilities"]
 }

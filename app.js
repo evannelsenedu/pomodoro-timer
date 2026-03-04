@@ -1,8 +1,16 @@
+/**
+ * POMMO - Pomodoro Timer (Web)
+ * @file app.js
+ * @description Timer logic, state, localStorage persistence, sounds, confetti.
+ * All data is stored locally; no network requests except canvas-confetti CDN (SRI-protected).
+ */
+
 const WORK_DURATION_OPTIONS = [30, 45, 60, 75, 90]; // minutes
 const BREAK_DURATION = 10 * 60; // 10 minutes in seconds
-const STORAGE_KEY = 'pomodoroTotalSessions';
+const STORAGE_KEY_LEGACY = 'pomodoroTotalSessions'; // Migration only
 const STORAGE_KEY_HISTORY = 'pomodoroHistory';
 const STORAGE_KEY_DURATION = 'pomodoroWorkDurationMinutes';
+const STORAGE_KEY_QUOTE = 'pomodoroQuoteFor';
 
 function getDateKey() {
   return new Date().toISOString().slice(0, 10);
@@ -34,11 +42,11 @@ function migrateToHistory() {
     if (migrated[key] !== n) changed = true;
   }
   if (Object.keys(history).length === 0) {
-    const oldTotal = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+    const oldTotal = parseInt(localStorage.getItem(STORAGE_KEY_LEGACY) || '0', 10);
     if (oldTotal > 0) {
       migrated[getDateKey()] = oldTotal * 60;
       changed = true;
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_KEY_LEGACY);
     }
   }
   if (changed) saveHistory(migrated);
@@ -84,7 +92,8 @@ const elements = {
   modalSkipBreakBtn: document.getElementById('modalSkipBreakBtn'),
   durationPickerOverlay: document.getElementById('durationPickerOverlay'),
   changeDurationBtn: document.getElementById('changeDurationBtn'),
-  skipBreakBtn: document.getElementById('skipBreakBtn')
+  skipBreakBtn: document.getElementById('skipBreakBtn'),
+  quoteSelect: document.getElementById('quoteSelect')
 };
 
 let audioContext = null;
@@ -504,7 +513,22 @@ function initApp() {
   } else {
     showDurationPicker();
   }
+  // Restore quote selection (whitelist: empty or known values only)
+  const savedQuote = localStorage.getItem(STORAGE_KEY_QUOTE);
+  if (elements.quoteSelect && savedQuote) {
+    const allowed = ['', 'Lola'];
+    elements.quoteSelect.value = allowed.includes(savedQuote) ? savedQuote : '';
+  }
 }
+
+// Persist quote selection (whitelist prevents XSS via localStorage)
+elements.quoteSelect?.addEventListener('change', () => {
+  const val = elements.quoteSelect.value;
+  const allowed = ['', 'Lola'];
+  if (allowed.includes(val)) {
+    localStorage.setItem(STORAGE_KEY_QUOTE, val);
+  }
+});
 
 elements.durationPickerOverlay?.querySelectorAll('.btn-duration').forEach((btn) => {
   btn.addEventListener('click', () => {

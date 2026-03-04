@@ -1,58 +1,79 @@
-# Pomodoro Timer
+# POMMO – Pomodoro Timer
 
-A web-based Pomodoro timer with 60-minute work sessions, 10-minute short breaks, and 30-minute long breaks after every 4 sessions. Session count is persisted in the browser.
+A Pomodoro timer available as a **web app** (PWA) and **native iOS app**. Focus sessions, 10-minute breaks, progress circles, and stats—all data stays on your device.
 
-## Features
+## Project Structure
 
-- **60-minute work sessions** — Focus for a full hour
-- **10-minute short breaks** — After sessions 1–3
-- **30-minute long break** — After the 4th session
-- **Pause/Resume** — Pause and resume both work and break timers
-- **Session tracking** — Total completed sessions stored in localStorage
-- **Phase-based styling** — Visual cues for work vs break phases
+```
+pomodoro-timer/
+├── index.html          # Web app entry
+├── app.js              # Web timer logic
+├── styles.css          # Web styling
+├── manifest.json       # PWA manifest
+├── pommo-logo.png      # Shared logo
+├── README.md           # This file
+├── SECURITY.md         # Security policy
+└── POMMO-iOS/          # Native iOS app
+    └── README.md       # iOS build instructions
+```
 
-## Local Development
+## Web App
 
-Open `index.html` in a browser, or serve the folder with any static file server:
+### Features
+
+- **Work sessions:** 30, 45, 60, 75, or 90 minutes (configurable)
+- **10-minute breaks** between work sessions
+- **6-session progress circles** — visual cycle indicator
+- **Stats:** Today, this week, this year, all-time (minutes)
+- **Confetti** on work completion
+- **Sound feedback** (start, pause, reset, etc.)
+- **"Do it for" quote selector** (e.g. Lola)
+- **Duration picker** on first run and via "Change duration"
+- **Pause/Resume, Reset, Skip Break**
+
+### Local Development
+
+Open `index.html` in a browser, or serve the folder with a static file server:
 
 ```bash
-# Using Python
+# Python
 python -m http.server 8000
 
-# Using Node.js (npx)
+# Node.js
 npx serve .
 ```
 
 Then visit `http://localhost:8000`.
 
-## Deploy to GitHub Pages
+### Deploy to GitHub Pages
 
-1. Create a new GitHub repository (e.g., `pomodoro-timer`).
+1. Create a repository (e.g. `pomodoro-timer`).
+2. Push the project files with `index.html` at the root.
+3. **Settings → Pages** → Deploy from branch `main`, folder `/ (root)`.
+4. Site will be at `https://YOUR_USERNAME.github.io/pomodoro-timer/`.
 
-2. Push the project files. Ensure `index.html` is at the repository root:
+### Security
 
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/YOUR_USERNAME/pomodoro-timer.git
-   git push -u origin main
-   ```
+- **Content-Security-Policy** restricts scripts, styles, and resources.
+- **Subresource Integrity (SRI)** verifies the canvas-confetti CDN script.
+- **localStorage** stores history and settings locally; no server or network data.
+- See [SECURITY.md](SECURITY.md) for details.
 
-3. In the repository, go to **Settings → Pages**.
+## iOS App
 
-4. Under "Build and deployment", choose **Deploy from a branch**.
-
-5. Select the `main` branch and `/ (root)` folder.
-
-6. Click **Save**. The site will be live at:
-
-   `https://YOUR_USERNAME.github.io/pomodoro-timer/`
+See [POMMO-iOS/README.md](POMMO-iOS/README.md) for build instructions, XcodeGen setup, and App Store checklist.
 
 ## Usage
 
-- **Start** — Begin the countdown
-- **Pause** — Pause the timer (time is preserved)
-- **Reset** — Reset the current phase to its full duration
-- **Reset session count** — Clear the total completed sessions
+| Action | Description |
+|--------|-------------|
+| **Start** | Begin the countdown |
+| **Pause** | Pause the timer (time preserved) |
+| **Reset** | Reset current phase to full duration |
+| **Skip Break** | Skip break and start next work session |
+| **Reset time stats** | Clear all history |
+| **Change duration** | Pick a new work session length |
+
+## License
+
+See repository for license information.

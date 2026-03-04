@@ -1,0 +1,31 @@
+# XcodeGen config - run `xcodegen generate` to create POMMO.xcodeproj
+# Install: brew install xcodegen
+# See README.md for build instructions.
+name: POMMO
+options:
+  bundleIdPrefix: com.pommo
+  deploymentTarget:
+    iOS: "15.0"
+  xcodeVersion: "14.0"
+  generateEmptyDirectories: true
+settings:
+  base:
+    SWIFT_VERSION: "5.5"
+targets:
+  POMMO:
+    type: application
+    platform: iOS
+    sources:
+      - path: POMMO
+        excludes:
+          - "Assets.xcassets"
+    resources:
+      - path: POMMO/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pommo.app
+    dependencies: []
+    info:
+      properties:
+        CFBundleDisplayName: POMMO
+        LSRequiresIPhoneOS: true
