@@ -25,13 +25,23 @@ function saveHistory(history) {
 
 function migrateToHistory() {
   const history = getHistory();
-  if (Object.keys(history).length > 0) return;
-  const oldTotal = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
-  if (oldTotal > 0) {
-    const today = getDateKey();
-    saveHistory({ [today]: oldTotal });
-    localStorage.removeItem(STORAGE_KEY);
+  const migrated = {};
+  let changed = false;
+  for (const [key, val] of Object.entries(history)) {
+    const n = typeof val === 'number' ? val : 0;
+    // Values <= 24 are likely session counts (convert to minutes); larger values are minutes
+    migrated[key] = n > 0 && n <= 24 ? n * 60 : n;
+    if (migrated[key] !== n) changed = true;
   }
+  if (Object.keys(history).length === 0) {
+    const oldTotal = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+    if (oldTotal > 0) {
+      migrated[getDateKey()] = oldTotal * 60;
+      changed = true;
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }
+  if (changed) saveHistory(migrated);
 }
 
 const state = {
@@ -60,9 +70,10 @@ const elements = {
   timerDisplay: document.getElementById('timerDisplay'),
   startPauseBtn: document.getElementById('startPauseBtn'),
   resetBtn: document.getElementById('resetBtn'),
-  sessionCountToday: document.getElementById('sessionCountToday'),
-  sessionCountWeek: document.getElementById('sessionCountWeek'),
-  sessionCountTotal: document.getElementById('sessionCountTotal'),
+  timeToday: document.getElementById('timeToday'),
+  timeWeek: document.getElementById('timeWeek'),
+  timeYear: document.getElementById('timeYear'),
+  timeTotal: document.getElementById('timeTotal'),
   resetSessionsBtn: document.getElementById('resetSessionsBtn'),
   progressCircles: document.getElementById('progressCircles'),
   title: document.querySelector('.title'),
@@ -70,8 +81,10 @@ const elements = {
   modalTitle: document.getElementById('modalTitle'),
   modalMessage: document.getElementById('modalMessage'),
   modalApproveBtn: document.getElementById('modalApproveBtn'),
+  modalSkipBreakBtn: document.getElementById('modalSkipBreakBtn'),
   durationPickerOverlay: document.getElementById('durationPickerOverlay'),
-  changeDurationBtn: document.getElementById('changeDurationBtn')
+  changeDurationBtn: document.getElementById('changeDurationBtn'),
+  skipBreakBtn: document.getElementById('skipBreakBtn')
 };
 
 let audioContext = null;
@@ -191,6 +204,12 @@ function formatTime(seconds) {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
+function formatHoursMinutes(totalMinutes) {
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  return `${hours}:${mins.toString().padStart(2, '0')}`;
+}
+
 function getCurrentDuration() {
   return state.mode === 'work' ? getWorkDurationSeconds() : BREAK_DURATION;
 }
@@ -199,8 +218,9 @@ function updateProgressCircles() {
   const circles = elements.progressCircles?.querySelectorAll('.circle');
   if (!circles || circles.length === 0) return;
 
-  const totalSessions = getTotalSessions();
-  // Circles represent current 6-session cycle
+  const workMins = getWorkDurationMinutes();
+  const totalMinutes = getTotalMinutes();
+  const totalSessions = workMins > 0 ? Math.floor(totalMinutes / workMins) : 0;
   let completedSessions = totalSessions % 6;
   if (completedSessions === 0 && totalSessions > 0 && state.mode === 'break') {
     completedSessions = 6; // keep all 6 filled during break after completing cycle
@@ -224,43 +244,52 @@ function updateProgressCircles() {
 function updateDisplay() {
   elements.timerDisplay.textContent = formatTime(state.timeRemaining);
   elements.startPauseBtn.textContent = state.isPaused ? 'Start' : 'Pause';
-  if (elements.sessionCountToday) elements.sessionCountToday.textContent = getSessionsToday();
-  if (elements.sessionCountWeek) elements.sessionCountWeek.textContent = getSessionsThisWeek();
-  if (elements.sessionCountTotal) elements.sessionCountTotal.textContent = getTotalSessions();
+  if (elements.timeToday) elements.timeToday.textContent = formatHoursMinutes(getMinutesToday());
+  if (elements.timeWeek) elements.timeWeek.textContent = formatHoursMinutes(getMinutesThisWeek());
+  if (elements.timeYear) elements.timeYear.textContent = formatHoursMinutes(getMinutesThisYear());
+  if (elements.timeTotal) elements.timeTotal.textContent = formatHoursMinutes(getTotalMinutes());
   if (elements.title) {
     elements.title.textContent = state.mode === 'work' ? 'Pomodoro Timer' : 'Break Time';
+  }
+  if (elements.skipBreakBtn) {
+    elements.skipBreakBtn.style.display = state.mode === 'break' ? '' : 'none';
   }
   updateProgressCircles();
 }
 
-function getTotalSessions() {
+function getTotalMinutes() {
   const history = getHistory();
   return Object.values(history).reduce((sum, n) => sum + (typeof n === 'number' ? n : 0), 0);
 }
 
-function getSessionsToday() {
+function getMinutesToday() {
   const history = getHistory();
-  const today = getDateKey();
-  return history[today] || 0;
+  return history[getDateKey()] || 0;
 }
 
-function getSessionsThisWeek() {
+function getMinutesThisWeek() {
   const history = getHistory();
-  const today = getDateKey();
   let sum = 0;
   for (let i = 0; i < 7; i++) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    sum += history[key] || 0;
+    sum += history[d.toISOString().slice(0, 10)] || 0;
   }
   return sum;
 }
 
-function incrementTotalSessions() {
+function getMinutesThisYear() {
+  const history = getHistory();
+  const year = new Date().getFullYear().toString();
+  return Object.entries(history).reduce((sum, [key, val]) => {
+    return key.startsWith(year) ? sum + (typeof val === 'number' ? val : 0) : sum;
+  }, 0);
+}
+
+function incrementCompletedMinutes(minutes) {
   const history = getHistory();
   const today = getDateKey();
-  history[today] = (history[today] || 0) + 1;
+  history[today] = (history[today] || 0) + minutes;
   saveHistory(history);
 }
 
@@ -275,21 +304,35 @@ function fireConfetti() {
   }
 }
 
-function showModal(title, message, onApprove) {
+function showModal(title, message, onApprove, options = {}) {
   if (!elements.modalOverlay) return;
   elements.modalTitle.textContent = title;
   elements.modalMessage.textContent = message;
   elements.modalOverlay.classList.add('visible');
   elements.modalOverlay.setAttribute('aria-hidden', 'false');
 
-  const handleApprove = () => {
-    elements.modalApproveBtn?.removeEventListener('click', handleApprove);
+  if (elements.modalSkipBreakBtn) {
+    elements.modalSkipBreakBtn.style.display = options.showSkipBreak ? '' : 'none';
+  }
+
+  const closeModal = () => {
     elements.modalOverlay.classList.remove('visible');
     elements.modalOverlay.setAttribute('aria-hidden', 'true');
+  };
+
+  const handleApprove = () => {
+    closeModal();
     playCalmingSound('start');
     onApprove();
   };
-  elements.modalApproveBtn.addEventListener('click', handleApprove);
+  const handleSkip = () => {
+    closeModal();
+    if (options.onSkip) options.onSkip();
+  };
+  elements.modalApproveBtn.addEventListener('click', handleApprove, { once: true });
+  if (options.showSkipBreak && elements.modalSkipBreakBtn) {
+    elements.modalSkipBreakBtn.addEventListener('click', handleSkip, { once: true });
+  }
 }
 
 function onWorkComplete() {
@@ -302,6 +345,17 @@ function onWorkComplete() {
     state.timerEndTime = Date.now() + state.timeRemaining * 1000;
     state.intervalId = setInterval(tick, 1000);
     updateDisplay();
+  }, {
+    showSkipBreak: true,
+    onSkip: () => {
+      state.mode = 'work';
+      state.timeRemaining = getWorkDurationSeconds();
+      state.isPaused = false;
+      state.timerEndTime = Date.now() + state.timeRemaining * 1000;
+      state.intervalId = setInterval(tick, 1000);
+      playCalmingSound('start');
+      updateDisplay();
+    }
   });
 }
 
@@ -328,7 +382,7 @@ function tick() {
     state.timerEndTime = null;
     state.isPaused = true;
     if (state.mode === 'work') {
-      incrementTotalSessions();
+      incrementCompletedMinutes(getWorkDurationMinutes());
       updateDisplay();
       onWorkComplete();
     } else {
@@ -377,7 +431,7 @@ function resetTimer() {
   updateDisplay();
 }
 
-function resetSessionCount() {
+function resetTimeStats() {
   saveHistory({});
   playCalmingSound('resetSessions');
   updateDisplay();
@@ -400,9 +454,23 @@ elements.resetBtn.addEventListener('click', () => {
   unlockAudioOnInteraction();
   resetTimer();
 });
+elements.skipBreakBtn?.addEventListener('click', () => {
+  unlockAudioOnInteraction();
+  if (state.mode !== 'break') return;
+  clearInterval(state.intervalId);
+  state.intervalId = null;
+  state.timerEndTime = null;
+  state.mode = 'work';
+  state.timeRemaining = getWorkDurationSeconds();
+  state.isPaused = false;
+  state.timerEndTime = Date.now() + state.timeRemaining * 1000;
+  state.intervalId = setInterval(tick, 1000);
+  playCalmingSound('start');
+  updateDisplay();
+});
 elements.resetSessionsBtn?.addEventListener('click', () => {
   unlockAudioOnInteraction();
-  resetSessionCount();
+  resetTimeStats();
 });
 
 function showDurationPicker() {
